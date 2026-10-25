@@ -1,0 +1,350 @@
+@import "tailwindcss" source("..");
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+    color-scheme: light;
+
+    --background: #f6f6f6;
+    --foreground: #040404;
+    --text: #444444;
+    --card: #ffffff;
+    --card-foreground: #444444;
+    --popover: #ffffff;
+    --popover-foreground: #040404;
+    --primary: #121212;
+    --primary-foreground: #ffffff;
+    --secondary: #efefef;
+    --secondary-foreground: #121212;
+    --muted: #efefef;
+    --muted-foreground: #6b6b6b;
+    --accent: #efefef;
+    --accent-foreground: #121212;
+    --destructive: #b3261e;
+    --border: #e4e4e4;
+    --input: #dcdcdc;
+    --ring: #121212;
+    --radius: 0.75rem;
+
+    --brand: #4338ca;
+    --brand-soft: #ecedfb;
+    --chart-brand: #4338ca;
+    --chart-muted: #717171;
+    --chart-grid: #e4e4e4;
+
+    --sky-day: #ffffff;
+    --sky-civil: #f2f2f6;
+    --sky-nautical: #e7e7ef;
+    --sky-astronomical: #dcdce8;
+    --sky-night: #d0d0df;
+
+    --illustration-ink: #3a3a3a;
+    --illustration-muted: #e4e4e4;
+    --illustration-soft: #ececec;
+
+    --header-height: 4.5rem;
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dark {
+    color-scheme: dark;
+
+    --background: #1c1c1c;
+    --foreground: #ffffff;
+    --text: #b4afb6;
+    --card: #262626;
+    --card-foreground: #b4afb6;
+    --popover: #262626;
+    --popover-foreground: #ffffff;
+    --primary: #ffffff;
+    --primary-foreground: #040404;
+    --secondary: #2e2e2e;
+    --secondary-foreground: #ffffff;
+    --muted: #2e2e2e;
+    --muted-foreground: #a29ea4;
+    --accent: #333333;
+    --accent-foreground: #ffffff;
+    --destructive: #f2b8b5;
+    --border: #3a3a3a;
+    --input: #444444;
+    --ring: #ffffff;
+
+    --brand: #a5b4fc;
+    --brand-soft: #2d2f4a;
+    --chart-brand: #7f84f4;
+    --chart-muted: #808080;
+    --chart-grid: #3a3a3a;
+
+    --sky-day: #3a3a3a;
+    --sky-civil: #333333;
+    --sky-nautical: #2c2c2e;
+    --sky-astronomical: #232326;
+    --sky-night: #19191d;
+
+    --illustration-ink: #d4d4d4;
+    --illustration-muted: #3a3a3a;
+    --illustration-soft: #2a2a2a;
+}
+
+@theme inline {
+    --font-sans: var(--font-heebo), ui-sans-serif, system-ui, sans-serif;
+    --font-heading: var(--font-signika), var(--font-heebo), ui-sans-serif, sans-serif;
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-text: var(--text);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-brand: var(--brand);
+    --color-brand-soft: var(--brand-soft);
+    --color-chart-brand: var(--chart-brand);
+    --color-chart-muted: var(--chart-muted);
+    --color-chart-grid: var(--chart-grid);
+    --color-sky-day: var(--sky-day);
+    --color-sky-civil: var(--sky-civil);
+    --color-sky-nautical: var(--sky-nautical);
+    --color-sky-astronomical: var(--sky-astronomical);
+    --color-sky-night: var(--sky-night);
+    --color-illustration-ink: var(--illustration-ink);
+    --color-illustration-muted: var(--illustration-muted);
+    --color-illustration-soft: var(--illustration-soft);
+
+    --radius-sm: calc(var(--radius) * 0.5);
+    --radius-md: calc(var(--radius) * 0.75);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.33);
+    --radius-2xl: calc(var(--radius) * 1.66);
+
+    --animate-rise: rise 0.7s var(--ease-out) both;
+    --animate-fade: fade-in 0.5s ease both;
+    --animate-grow-x: grow-x 1s var(--ease-out) both;
+    --animate-draw: draw 1.4s var(--ease-out) both;
+
+    @keyframes rise {
+        from {
+            opacity: 0;
+            translate: 0 1rem;
+        }
+    }
+
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+        }
+    }
+
+    @keyframes grow-x {
+        from {
+            scale: 0 1;
+        }
+    }
+
+    @keyframes draw {
+        from {
+            stroke-dasharray: 0 1;
+        }
+    }
+}
+
+@utility container-page {
+    width: 100%;
+    margin-inline: auto;
+    padding-inline: 1rem;
+
+    @media (width >= 36rem) {
+        max-width: 33.75rem;
+    }
+
+    @media (width >= 48rem) {
+        max-width: 45rem;
+    }
+
+    @media (width >= 64rem) {
+        max-width: 60rem;
+    }
+
+    @media (width >= 80rem) {
+        max-width: 82.5rem;
+    }
+}
+
+@utility stagger {
+    & > * {
+        animation: var(--animate-rise);
+    }
+
+    & > :nth-child(2) {
+        animation-delay: 60ms;
+    }
+
+    & > :nth-child(3) {
+        animation-delay: 120ms;
+    }
+
+    & > :nth-child(4) {
+        animation-delay: 180ms;
+    }
+
+    & > :nth-child(5) {
+        animation-delay: 240ms;
+    }
+
+    & > :nth-child(n + 6) {
+        animation-delay: 300ms;
+    }
+}
+
+@utility reveal {
+    @supports (animation-timeline: view()) {
+        animation: rise linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 35%;
+    }
+}
+
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-old(root) {
+    animation: 0.2s ease both fade-out;
+}
+
+::view-transition-new(root) {
+    animation: 0.4s var(--ease-out) both page-in;
+}
+
+:root.theme-switching::view-transition-old(root) {
+    animation: 0.3s ease both fade-out;
+}
+
+:root.theme-switching::view-transition-new(root) {
+    animation: 0.3s ease both fade-in;
+}
+
+@keyframes fade-out {
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes page-in {
+    from {
+        opacity: 0;
+        translate: 0 0.75rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+
+    html {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        scroll-padding-top: calc(var(--header-height) + 1rem);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        @apply flex min-h-dvh flex-col bg-background font-sans text-text antialiased;
+        line-height: 1.625;
+    }
+
+    main {
+        flex-grow: 1;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-heading font-bold text-balance text-foreground;
+        line-height: 1.2;
+    }
+
+    p {
+        text-wrap: pretty;
+    }
+
+    :root {
+        interpolate-size: allow-keywords;
+    }
+
+    details::details-content {
+        block-size: 0;
+        overflow: clip;
+        transition: block-size 0.35s var(--ease-out), content-visibility 0.35s allow-discrete;
+    }
+
+    details[open]::details-content {
+        block-size: auto;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 3px;
+    }
+
+    a[href],
+    button:not(:disabled),
+    summary,
+    select:not(:disabled),
+    label:has(> input:not(:disabled)),
+    input[type="checkbox"]:not(:disabled),
+    input[type="date"]:not(:disabled),
+    [role="button"]:not([aria-disabled="true"]),
+    [role="option"]:not([aria-disabled="true"]),
+    [role="switch"]:not([aria-disabled="true"]),
+    [role="checkbox"]:not([aria-disabled="true"]),
+    [role="gridcell"] button:not(:disabled) {
+        cursor: pointer;
+    }
+
+    :disabled,
+    [aria-disabled="true"] {
+        cursor: not-allowed;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    @view-transition {
+        navigation: none;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0s !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

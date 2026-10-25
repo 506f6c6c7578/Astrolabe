@@ -1,0 +1,89 @@
+---
+import { Sparkles } from "lucide-react";
+import { toCatalogItem } from "@/components/astronomy/catalog-items";
+import { MoonCard } from "@/components/astronomy/moon-card";
+import NightChart from "@/components/astronomy/NightChart.astro";
+import NightHeader from "@/components/astronomy/NightHeader.astro";
+import { ObjectCatalog } from "@/components/astronomy/object-catalog";
+import { ObservationWindows } from "@/components/astronomy/observation-windows";
+import { PlanetTable } from "@/components/astronomy/planet-table";
+import { PlannerForm } from "@/components/astronomy/planner-form";
+import { ScoreSummary } from "@/components/astronomy/score-summary";
+import { SunCard } from "@/components/astronomy/sun-card";
+import { WeatherCard } from "@/components/astronomy/weather-card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Panel } from "@/components/ui/panel";
+import { pages, site } from "@/data/site";
+import { deepSkyMinimumAltitude } from "@/domain/astronomy/deep-sky";
+import { ratingLabels } from "@/domain/observation/score";
+import { formatLongDate } from "@/lib/date/format";
+import { parseNightQuery } from "@/lib/validation/night-query";
+import { resolveNightQuery } from "@/services/astronomy/observation";
+import Base from "@/layouts/Base.astro";
+
+export const prerender = false;
+
+const resolution = await resolveNightQuery(parseNightQuery(Astro.url.searchParams));
+
+if (resolution.kind === "home") return Astro.redirect(pages.home);
+if (resolution.kind === "redirect") return Astro.redirect(resolution.location, 303);
+
+const report = resolution.kind === "report" ? resolution.report : null;
+const failure = resolution.kind === "failure" ? resolution.failure : null;
+
+Astro.response.status = failure?.status ?? 200;
+Astro.response.headers.set("Cache-Control", report ? "public, max-age=300" : "no-store");
+
+const title = report
+    ? `Nuit du ${formatLongDate(report.date)} à ${report.place.name} | ${site.name}`
+    : `${failure?.title ?? "Erreur"} | ${site.name}`;
+const description = report
+    ? `Qualité de la nuit : ${report.score.value}/100 (${ratingLabels[report.score.rating]}). Crépuscules, Lune, météo, planètes et objets Messier visibles à ${report.place.name}.`
+    : site.description;
+const timeZone = report?.night.timeZone ?? "UTC";
+const deepSkyItems = report?.deepSky.map(({ object, bestAltitude, bestTime }) =>
+    toCatalogItem(object, { bestAltitude, bestTime, timeZone })) ?? [];
+---
+
+<Base title={title} description={description} noindex>
+    <div class="container-page grid gap-6 pt-10 md:pt-14">
+        {report ? (
+                <>
+                    <NightHeader place={report.place} date={report.date}/>
+                    <ScoreSummary score={report.score} bestWindow={report.windows[0]} timeZone={timeZone}/>
+                    <div class="grid gap-6 lg:grid-cols-3">
+                        <SunCard night={report.night}/>
+                        <MoonCard moon={report.moon} timeZone={timeZone} southern={report.place.latitude < 0}/>
+                        <WeatherCard weather={report.weather}/>
+                    </div>
+                    <NightChart report={report}/>
+                    <ObservationWindows windows={report.windows} timeZone={timeZone}/>
+                    <PlanetTable planets={report.planets} timeZone={timeZone}/>
+                    <Panel title="Objets Messier visibles" headingId="messier-titre" icon={Sparkles}>
+                        {deepSkyItems.length > 0 ? (
+                                <>
+                                    <p>
+                                        Objets qui dépassent {deepSkyMinimumAltitude}° de hauteur quand le ciel est
+                                        suffisamment sombre, du plus brillant au plus discret.
+                                    </p>
+                                    <ObjectCatalog client:visible items={deepSkyItems} preview={12}/>
+                                </>
+                        ) : (
+                                <p>
+                                    Aucun objet Messier ne dépasse {deepSkyMinimumAltitude}° de hauteur pendant une
+                                    période suffisamment sombre cette nuit.
+                                </p>
+                        )}
+                    </Panel>
+                </>
+        ) : (
+                <Card className="max-w-3xl animate-rise [--card-spacing:--spacing(6)] md:[--card-spacing:--spacing(8)]">
+                    <CardContent className="grid gap-5">
+                        <h1 class="text-3xl">{failure?.title}</h1>
+                        <p>{failure?.message}</p>
+                        <PlannerForm client:load/>
+                    </CardContent>
+                </Card>
+        )}
+    </div>
+</Base>

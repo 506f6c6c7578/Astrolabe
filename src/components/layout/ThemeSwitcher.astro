@@ -1,0 +1,11 @@
+---
+import { Moon, Sun } from "lucide-react";
+---
+
+<button type="button" role="switch" aria-checked="false" aria-label="Thème sombre" data-theme-switcher
+        class="relative h-6 w-10 shrink-0 rounded-full before:absolute before:inset-x-0 before:inset-y-1 before:rounded-full before:bg-border">
+    <span class="absolute top-0 left-0 grid size-6 place-items-center rounded-full bg-primary text-background shadow-sm transition-transform duration-300 ease-out dark:translate-x-4">
+        <Sun className="col-start-1 row-start-1 size-3.5 transition-opacity duration-300 dark:opacity-0" strokeWidth={2.5} aria-hidden="true"/>
+        <Moon className="col-start-1 row-start-1 size-3.5 opacity-0 transition-opacity duration-300 dark:opacity-100" strokeWidth={2.5} aria-hidden="true"/>
+    </span>
+</button>

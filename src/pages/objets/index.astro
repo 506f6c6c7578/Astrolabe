@@ -1,0 +1,24 @@
+---
+import { toCatalogItem } from "@/components/astronomy/catalog-items";
+import { ObjectCatalog } from "@/components/astronomy/object-catalog";
+import { messierObjects } from "@/data/catalog/messier";
+import { site } from "@/data/site";
+import Base from "@/layouts/Base.astro";
+
+const title = `Catalogue Messier | ${site.name}`;
+const description = `Les ${messierObjects.length} objets du catalogue de Messier : galaxies, amas, nébuleuses. Coordonnées, magnitude, constellation, meilleure période et instrument conseillé.`;
+---
+
+<Base title={title} description={description}>
+    <section class="container-page grid gap-8 pt-12 md:pt-16">
+        <header class="stagger grid max-w-3xl gap-4">
+            <h1 class="text-4xl md:text-5xl">Catalogue Messier</h1>
+            <p class="text-lg">
+                Les {messierObjects.length} objets répertoriés par Charles Messier au XVIIIe siècle restent les cibles
+                favorites des observateurs : galaxies, amas d'étoiles et nébuleuses accessibles depuis l'hémisphère
+                nord. Ajoute tes favoris pour les retrouver dans chaque planification.
+            </p>
+        </header>
+        <ObjectCatalog client:load items={messierObjects.map((object) => toCatalogItem(object))}/>
+    </section>
+</Base>

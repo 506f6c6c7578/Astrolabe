@@ -1,0 +1,12 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { themeIllustration } from "@/lib/illustration";
+
+interface Props extends HTMLAttributes<"div"> {
+    svg: string;
+}
+
+const { svg, ...attributes } = Astro.props;
+---
+
+<div {...attributes} set:html={themeIllustration(svg)}/>

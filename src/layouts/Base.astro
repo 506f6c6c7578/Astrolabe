@@ -1,0 +1,45 @@
+---
+import { Font } from "astro:assets";
+import Footer from "@/components/layout/Footer.astro";
+import Header from "@/components/layout/Header.astro";
+import Seo from "@/components/layout/Seo.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { site } from "@/data/site";
+import { getScriptHash } from "@/lib/csp";
+import themeScript from "@/scripts/theme.js?raw";
+import { cn } from "cn";
+import "@/styles/global.css";
+
+interface Props {
+    title: string;
+    description: string;
+    noindex?: boolean;
+}
+
+const { title, description, noindex } = Astro.props;
+
+Astro.csp?.insertScriptHash(getScriptHash(themeScript));
+Astro.csp?.insertScriptResource("'self'");
+---
+
+<!doctype html>
+<html lang={site.lang} dir="ltr">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <script is:inline set:html={themeScript}/>
+    <Seo title={title} description={description} noindex={noindex}/>
+    <Font cssVariable="--font-signika" preload/>
+    <Font cssVariable="--font-heebo" preload/>
+</head>
+<body>
+<a href="#contenu" class={cn(buttonVariants({ size: "lg" }), "fixed top-3 left-3 z-50 -translate-y-24 focus-visible:translate-y-0")}>
+    Aller au contenu principal
+</a>
+<Header/>
+<main id="contenu">
+    <slot/>
+</main>
+<Footer/>
+</body>
+</html>

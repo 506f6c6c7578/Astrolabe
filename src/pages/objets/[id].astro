@@ -1,0 +1,101 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+import { ArrowLeft, ChevronLeft, ChevronRight, Telescope } from "lucide-react";
+import { FavoriteToggle } from "@/components/astronomy/favorite-toggle";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataList } from "@/components/ui/data-list";
+import { getConstellationName } from "@/data/catalog/constellations";
+import { getObjectTitle, messierObjects } from "@/data/catalog/messier";
+import { objectTypes } from "@/data/catalog/object-types";
+import { pages, site } from "@/data/site";
+import {
+    deepSkyMinimumAltitude,
+    getBestObservationMonth,
+    getObservableLatitudes
+} from "@/domain/astronomy/deep-sky";
+import { getRecommendedInstrument, instrumentLabels } from "@/domain/astronomy/sky";
+import { formatMonth } from "@/lib/date/format";
+import { formatDeclination, formatLatitude, formatMagnitude, formatRightAscension } from "@/lib/format";
+import Base from "@/layouts/Base.astro";
+
+export const getStaticPaths = (() => messierObjects.map((object, index) => ({
+    params: { id: object.id },
+    props: {
+        object,
+        previous: messierObjects[index - 1],
+        next: messierObjects[index + 1]
+    }
+}))) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { object, previous, next } = Astro.props;
+const objectTitle = getObjectTitle(object);
+const type = objectTypes[object.type];
+const constellation = getConstellationName(object.constellation);
+const latitudes = getObservableLatitudes(object.declination);
+const outlineButton = buttonVariants({ variant: "outline", size: "lg" });
+
+const items = [
+    { label: "Désignation", value: object.designation },
+    { label: "Catalogue NGC / IC", value: object.ngc ?? "Aucun" },
+    { label: "Type", value: type },
+    { label: "Constellation", value: constellation },
+    { label: "Ascension droite (J2000)", value: formatRightAscension(object.rightAscension) },
+    { label: "Déclinaison (J2000)", value: formatDeclination(object.declination) },
+    { label: "Magnitude visuelle", value: formatMagnitude(object.magnitude), highlight: true },
+    { label: "Instrument conseillé", value: instrumentLabels[getRecommendedInstrument(object.magnitude)] },
+    { label: "Meilleure période", value: formatMonth(getBestObservationMonth(object.rightAscension)), highlight: true },
+    { label: "Latitudes favorables", value: `de ${formatLatitude(latitudes.min)} à ${formatLatitude(latitudes.max)}` }
+];
+
+const title = `${objectTitle} | ${site.name}`;
+const description = `${objectTitle} : ${type.toLowerCase()} dans la constellation ${constellation}, magnitude ${formatMagnitude(object.magnitude)}. Coordonnées, meilleure période d'observation et instrument conseillé.`;
+---
+
+<Base title={title} description={description}>
+    <article class="container-page grid max-w-3xl! gap-6 pt-10 md:pt-14">
+        <a href={pages.objects} class={buttonVariants({ variant: "ghost", className: "-ml-2.5 justify-self-start" })}>
+            <ArrowLeft aria-hidden="true"/>
+            Catalogue Messier
+        </a>
+        <header class="stagger grid gap-3">
+            <p class="font-semibold text-brand">{type} · {constellation}</p>
+            <h1 class="text-4xl md:text-5xl">{objectTitle}</h1>
+            <div class="mt-2 flex flex-wrap gap-2.5">
+                <FavoriteToggle client:load objectId={object.id}/>
+                <a href={pages.home} class={buttonVariants({ size: "lg" })}>
+                    <Telescope aria-hidden="true"/>
+                    Planifier une nuit
+                </a>
+            </div>
+        </header>
+        <Card className="reveal [--card-spacing:--spacing(6)] md:[--card-spacing:--spacing(7)]">
+            <CardHeader>
+                <CardTitle><h2 class="text-lg">Caractéristiques</h2></CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 text-[0.9375rem]">
+                <DataList items={items}/>
+                <p class="text-sm text-muted-foreground">
+                    La meilleure période correspond au mois où l'objet culmine vers minuit. Les latitudes favorables
+                    sont celles d'où il s'élève à plus de {deepSkyMinimumAltitude}° au-dessus de l'horizon.
+                </p>
+            </CardContent>
+        </Card>
+        <nav class="flex gap-2.5" aria-label="Objets voisins">
+            {previous && (
+                    <a class={outlineButton} href={`${pages.objects}/${previous.id}`}>
+                        <ChevronLeft aria-hidden="true"/>
+                        {previous.designation}
+                    </a>
+            )}
+            {next && (
+                    <a class={buttonVariants({ variant: "outline", size: "lg", className: "ml-auto" })} href={`${pages.objects}/${next.id}`}>
+                        {next.designation}
+                        <ChevronRight aria-hidden="true"/>
+                    </a>
+            )}
+        </nav>
+    </article>
+</Base>

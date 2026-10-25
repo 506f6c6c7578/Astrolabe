@@ -1,0 +1,41 @@
+---
+import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
+import { FavoriteToggle } from "@/components/astronomy/favorite-toggle";
+import { NightEditor } from "@/components/astronomy/night-editor";
+import { buttonVariants } from "@/components/ui/button";
+import { formatLongDate, formatShortDate } from "@/lib/date/format";
+import { addDays, type IsoDate } from "@/lib/date/zoned";
+import { formatCoordinates } from "@/lib/format";
+import { createNightPath } from "@/lib/validation/night-query";
+import type { Place } from "@/lib/validation/place";
+
+interface Props {
+    place: Place;
+    date: IsoDate;
+}
+
+const { place, date } = Astro.props;
+const nextDate = addDays(date, 1);
+const navigationClass = buttonVariants({ variant: "outline", size: "lg" });
+---
+
+<header class="stagger grid gap-3">
+    <p class="font-semibold text-brand">Nuit du {formatShortDate(date)} au {formatLongDate(nextDate)}</p>
+    <h1 class="text-4xl md:text-5xl">{place.name}</h1>
+    <p class="flex items-start gap-2 text-muted-foreground">
+        <MapPin className="mt-1 size-4 shrink-0" aria-hidden="true"/>
+        <span>{place.region && `${place.region} · `}{formatCoordinates(place.latitude, place.longitude)} · {place.timeZone}</span>
+    </p>
+    <div class="mt-2 flex flex-wrap gap-2.5">
+        <a class={navigationClass} href={createNightPath(place, addDays(date, -1))} rel="nofollow">
+            <ChevronLeft aria-hidden="true"/>
+            Nuit précédente
+        </a>
+        <a class={navigationClass} href={createNightPath(place, nextDate)} rel="nofollow">
+            Nuit suivante
+            <ChevronRight aria-hidden="true"/>
+        </a>
+        <FavoriteToggle client:load place={place}/>
+    </div>
+    <NightEditor client:visible place={place} date={date}/>
+</header>

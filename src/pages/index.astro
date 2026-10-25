@@ -1,0 +1,124 @@
+---
+import { CloudMoon, Gauge, MoonStar, Orbit, Sparkles, Sunset } from "lucide-react";
+import observationIllustration from "@/assets/illustrations/observation.svg?raw";
+import { FavoritePlaces } from "@/components/astronomy/favorite-places";
+import { PlannerForm } from "@/components/astronomy/planner-form";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Illustration from "@/components/ui/Illustration.astro";
+import { messierObjects } from "@/data/catalog/messier";
+import { site } from "@/data/site";
+import { twilightAltitudes } from "@/domain/astronomy/sun";
+import { ratingLabels, ratingMinimums, ratings, scoreModel } from "@/domain/observation/score";
+import { forecastRangeDays } from "@/domain/weather/forecast";
+import { formatPercent, formatPercentValue, formatSpeed } from "@/lib/format";
+import Base from "@/layouts/Base.astro";
+
+const forecastDays = forecastRangeDays.future + 1;
+const darkSkyAltitude = Math.abs(twilightAltitudes.astronomical);
+
+const features = [
+    {
+        icon: Sunset,
+        title: "Soleil et crépuscules",
+        text: "Coucher, lever et fin de chaque crépuscule : tu sais quand commence et finit la nuit astronomique."
+    },
+    {
+        icon: MoonStar,
+        title: "Lune",
+        text: "Phase, illumination, lever, coucher et gêne réelle pendant la nuit noire."
+    },
+    {
+        icon: CloudMoon,
+        title: "Météo",
+        text: `Nuages heure par heure, humidité, vent et risque de rosée jusqu'à ${forecastDays} jours.`
+    },
+    {
+        icon: Orbit,
+        title: "Planètes",
+        text: "Hauteur maximale, heure idéale, magnitude et instrument conseillé."
+    },
+    {
+        icon: Sparkles,
+        title: "Objets Messier",
+        text: `Les ${messierObjects.length} objets du catalogue, filtrés selon ce qui est réellement observable.`
+    },
+    {
+        icon: Gauge,
+        title: "Score expliqué",
+        text: "Une note sur 100 et le détail de chaque facteur, sans boîte noire."
+    }
+];
+---
+
+<Base title={site.title} description={site.description}>
+    <section class="container-page grid items-center gap-10 pt-12 pb-10 md:pt-16 lg:grid-cols-[3fr_2fr] lg:gap-16">
+        <div class="stagger">
+            <p class="mb-3 font-heading text-sm font-bold tracking-widest text-brand uppercase">{site.name}</p>
+            <h1 class="mb-5 text-4xl md:text-5xl lg:text-6xl">{site.tagline}</h1>
+            <p class="max-w-xl text-lg">
+                Choisis un lieu et une date : Astrolabe calcule la nuit astronomique, la gêne de la Lune, les
+                conditions météo, les planètes et les objets Messier visibles, puis te propose les meilleurs
+                créneaux pour sortir ton instrument.
+            </p>
+        </div>
+        <Illustration class="mx-auto w-full max-w-md animate-rise [animation-delay:150ms]" svg={observationIllustration}/>
+    </section>
+
+    <section class="container-page grid gap-6" aria-labelledby="planifier-titre">
+        <Card className="animate-rise shadow-xl shadow-black/5 [--card-spacing:--spacing(6)] [animation-delay:200ms] md:[--card-spacing:--spacing(8)]">
+            <CardHeader>
+                <CardTitle><h2 id="planifier-titre" class="text-2xl">Planifier une nuit</h2></CardTitle>
+            </CardHeader>
+            <CardContent>
+                <PlannerForm client:load/>
+            </CardContent>
+        </Card>
+        <FavoritePlaces client:load/>
+    </section>
+
+    <section class="container-page py-20" aria-labelledby="analyse-titre">
+        <h2 id="analyse-titre" class="reveal mb-8 text-3xl md:text-4xl">Ce qu'Astrolabe analyse</h2>
+        <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map(({ icon: Icon, title, text }) => (
+                    <li class="reveal">
+                        <Card className="h-full gap-3 transition-[translate,box-shadow] duration-300 ease-out [--card-spacing:--spacing(6)] hover:-translate-y-1 hover:shadow-lg hover:shadow-black/5">
+                            <CardContent className="grid gap-3">
+                                <span class="grid size-11 place-items-center rounded-xl bg-brand-soft text-brand">
+                                    <Icon className="size-5" aria-hidden="true"/>
+                                </span>
+                                <h3 class="text-lg">{title}</h3>
+                                <p>{text}</p>
+                            </CardContent>
+                        </Card>
+                    </li>
+            ))}
+        </ul>
+    </section>
+
+    <section class="container-page" aria-labelledby="score-titre">
+        <Card className="reveal max-w-4xl [--card-spacing:--spacing(6)] md:[--card-spacing:--spacing(8)]">
+            <CardContent className="grid gap-4 text-base">
+                <h2 id="score-titre" class="text-3xl">Comment le score est calculé</h2>
+                <p>
+                    Le score combine la qualité astronomique de la nuit et la météo. L'obscurité compte pour
+                    {formatPercent(scoreModel.darknessWeight)} : elle atteint son maximum avec
+                    {scoreModel.fullDarknessHours} heures de ciel pleinement noir, quand le Soleil est à plus de
+                    {darkSkyAltitude}° sous l'horizon. La Lune compte pour {formatPercent(scoreModel.moonWeight)} :
+                    sa gêne dépend de son illumination et du temps qu'elle passe levée pendant la nuit noire.
+                </p>
+                <p>
+                    Ce résultat est ensuite multiplié par la part de ciel dégagé, puis légèrement réduit en cas
+                    d'humidité supérieure à {formatPercentValue(scoreModel.humidity.threshold)} ou de vent supérieur à
+                    {formatSpeed(scoreModel.wind.threshold)}. Au-delà de {forecastDays} jours, les prévisions ne sont pas
+                    disponibles : le score ne tient alors compte que du ciel.
+                </p>
+                <ul class="mt-2 flex flex-wrap gap-2" aria-label="Échelle du score">
+                    {ratings.map((rating) => (
+                            <li><Badge variant="outline" className="h-7 px-3 text-sm">{ratingMinimums[rating]} et plus : {ratingLabels[rating]}</Badge></li>
+                    ))}
+                </ul>
+            </CardContent>
+        </Card>
+    </section>
+</Base>

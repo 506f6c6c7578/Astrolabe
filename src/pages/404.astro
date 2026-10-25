@@ -1,0 +1,19 @@
+---
+import { Telescope } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { pages, site } from "@/data/site";
+import Base from "@/layouts/Base.astro";
+---
+
+<Base title={`Page introuvable | ${site.name}`}
+      description="La page que tu recherches n'existe pas ou a été déplacée." noindex>
+    <section class="container-page stagger grid max-w-xl! justify-items-center gap-4 py-24 text-center">
+        <p class="font-heading text-8xl leading-none font-bold text-foreground" aria-hidden="true">404</p>
+        <h1 class="text-3xl">Page introuvable</h1>
+        <p>Cette page s'est perdue quelque part entre deux constellations.</p>
+        <a class={buttonVariants({ size: "lg", className: "mt-4" })} href={pages.home}>
+            <Telescope aria-hidden="true"/>
+            Planifier une nuit
+        </a>
+    </section>
+</Base>

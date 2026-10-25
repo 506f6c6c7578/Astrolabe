@@ -1,0 +1,30 @@
+---
+import Logo from "@/components/layout/Logo.astro";
+import ThemeSwitcher from "@/components/layout/ThemeSwitcher.astro";
+import { navigation, pages } from "@/data/site";
+import { getPagePath } from "@/lib/url";
+
+const pagePath = getPagePath(Astro.url);
+const section = pagePath === pages.night ? pages.home : `/${pagePath.split("/")[1] ?? ""}`;
+---
+
+<header class="sticky top-0 z-30 border-b border-border/70 bg-background/75 backdrop-blur-xl backdrop-saturate-150 [view-transition-name:site-header]">
+    <div class="container-page flex h-(--header-height) items-center justify-between gap-4">
+        <Logo compact/>
+        <div class="flex items-center gap-2 md:gap-5">
+            <nav aria-label="Navigation principale">
+                <ul class="flex gap-1">
+                    {navigation.map(({ label, href }) => (
+                            <li>
+                                <a href={href} aria-current={href === section ? "page" : undefined}
+                                   class="relative block rounded-md px-2.5 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-accent after:absolute after:inset-x-2.5 after:bottom-1 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-foreground after:transition-transform after:duration-300 aria-[current=page]:after:scale-x-100 md:text-base">
+                                    {label}
+                                </a>
+                            </li>
+                    ))}
+                </ul>
+            </nav>
+            <ThemeSwitcher/>
+        </div>
+    </div>
+</header>
