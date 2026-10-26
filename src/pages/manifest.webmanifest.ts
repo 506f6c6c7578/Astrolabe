@@ -12,8 +12,8 @@ export const GET: APIRoute = () =>
         start_url: "/",
         scope: "/",
         display: "standalone",
-        background_color: brandColors.body,
-        theme_color: brandColors.body,
+        background_color: brandColors.surface,
+        theme_color: brandColors.surface,
         icons: iconSizes.flatMap((size) =>
             ["any", "maskable"].map((purpose) => ({
                 src: `/icons/${size}.png`,

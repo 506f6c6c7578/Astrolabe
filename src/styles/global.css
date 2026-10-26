@@ -7,7 +7,7 @@
 :root {
     color-scheme: light;
 
-    --background: #f6f6f6;
+    --background: #ffffff;
     --foreground: #040404;
     --text: #444444;
     --card: #ffffff;
@@ -28,6 +28,7 @@
     --ring: #121212;
     --radius: 0.75rem;
 
+    --surface: #f6f6f6;
     --brand: #4338ca;
     --brand-soft: #ecedfb;
     --chart-brand: #4338ca;
@@ -44,7 +45,7 @@
     --illustration-muted: #e4e4e4;
     --illustration-soft: #ececec;
 
-    --header-height: 4.5rem;
+    --header-height: 5.5rem;
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -71,6 +72,7 @@
     --input: #444444;
     --ring: #ffffff;
 
+    --surface: #222222;
     --brand: #a5b4fc;
     --brand-soft: #2d2f4a;
     --chart-brand: #7f84f4;
@@ -112,6 +114,7 @@
     --color-input: var(--input);
     --color-ring: var(--ring);
 
+    --color-surface: var(--surface);
     --color-brand: var(--brand);
     --color-brand-soft: var(--brand-soft);
     --color-chart-brand: var(--chart-brand);

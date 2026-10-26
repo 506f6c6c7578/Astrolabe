@@ -237,6 +237,14 @@ test.describe("catalogue Messier", () => {
         await expectNoHorizontalOverflow(page);
         expect(errors).toEqual([]);
     });
+
+    test("referme le sélecteur de type quand la page défile", async ({ page }) => {
+        await visit(page, "/objets");
+        await page.getByLabel("Type d'objet").click();
+        await expect(page.getByRole("menu")).toBeVisible();
+        await page.mouse.wheel(0, 600);
+        await expect(page.getByRole("menu")).toHaveCount(0);
+    });
 });
 
 test.describe("menu contextuel des objets", () => {

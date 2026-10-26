@@ -1,5 +1,5 @@
 import { ChevronDown } from "lucide-react";
-import type { ComponentProps } from "react";
+import { type ComponentProps, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -8,6 +8,7 @@ import {
     DropdownMenuRadioItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { useCloseOnScroll } from "@/hooks/use-close-on-scroll";
 import { cn } from "cn";
 
 type OptionValue = string | number;
@@ -35,13 +36,16 @@ function preserveMovedFocus(event: Event) {
 }
 
 export function SelectMenu<Value extends OptionValue>({ value, options, onValueChange, className, ...props }: SelectMenuProps<Value>) {
+    const [open, setOpen] = useState(false);
+    useCloseOnScroll(open, setOpen);
+
     const select = (next: string) => {
         const option = options.find((candidate) => String(candidate.value) === next);
         if (option) onValueChange(option.value);
     };
 
     return (
-        <DropdownMenu modal={false}>
+        <DropdownMenu modal={false} open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" className={cn("justify-between", className)} {...props}>
                     <span className="truncate">{options.find((option) => option.value === value)?.label}</span>

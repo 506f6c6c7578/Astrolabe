@@ -44,5 +44,6 @@ export const legalLinks = {
 
 export const credits: readonly NavigationLink[] = [
     { label: "Météo et géocodage : Open-Meteo (CC BY 4.0)", href: "https://open-meteo.com" },
-    { label: "Calculs : Astronomy Engine", href: "https://github.com/cosinekitty/astronomy" }
+    { label: "Calculs : Astronomy Engine", href: "https://github.com/cosinekitty/astronomy" },
+    { label: "Code source sur GitHub", href: site.repository }
 ];

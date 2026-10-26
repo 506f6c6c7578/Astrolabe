@@ -6,6 +6,7 @@ import Seo from "@/components/layout/Seo.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { site } from "@/data/site";
 import { getScriptHash } from "@/lib/csp";
+import navigationScript from "@/scripts/navigation.js?raw";
 import themeScript from "@/scripts/theme.js?raw";
 import { cn } from "cn";
 import "@/styles/global.css";
@@ -18,7 +19,9 @@ interface Props {
 
 const { title, description, noindex } = Astro.props;
 
-Astro.csp?.insertScriptHash(getScriptHash(themeScript));
+for (const script of [themeScript, navigationScript]) {
+    Astro.csp?.insertScriptHash(getScriptHash(script));
+}
 Astro.csp?.insertScriptResource("'self'");
 ---
 

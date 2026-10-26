@@ -1,12 +1,6 @@
 ---
 import { pages, site } from "@/data/site";
 import { createLogoMark } from "@/lib/brand";
-
-interface Props {
-    compact?: boolean;
-}
-
-const { compact = false } = Astro.props;
 ---
 
 <a href={pages.home} aria-label={`${site.name}, retour à l'accueil`}
@@ -16,5 +10,5 @@ const { compact = false } = Astro.props;
         <rect width="64" height="64" rx="14" fill="currentColor"></rect>
         <g class="text-background" set:html={createLogoMark("currentColor")}/>
     </svg>
-    <span class:list={{ "max-sm:sr-only": compact }}>{site.name}</span>
+    <span>{site.name}</span>
 </a>
