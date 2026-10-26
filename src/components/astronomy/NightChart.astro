@@ -1,9 +1,11 @@
 ---
 import { ChartSpline } from "lucide-react";
+import { NightTimeline, skyPhaseClasses } from "@/components/astronomy/night-timeline";
+import { toNightTimelineData } from "@/components/astronomy/night-timeline-data";
 import { Panel } from "@/components/ui/panel";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { findHighestPoint } from "@/domain/astronomy/sky";
-import { type SkyPhase, skyPhaseLabels, skyPhases } from "@/domain/astronomy/sun";
+import { skyPhaseLabels, skyPhases } from "@/domain/astronomy/sun";
 import { sampleStepMs } from "@/domain/observation/night";
 import type { ObservationReport } from "@/domain/observation/report";
 import { formatTime } from "@/lib/date/format";
@@ -14,87 +16,16 @@ interface Props {
 }
 
 const { report } = Astro.props;
-const { night, samples, windows, weather } = report;
+const { night, samples, windows } = report;
 const { timeZone } = night;
 
-const width = 720;
-const margin = { left: 44, right: 12 };
-const plotWidth = width - margin.left - margin.right;
-const altitudeAxis = { top: 16, height: 188, min: -20, max: 90, ticks: [0, 30, 60, 90] };
-const altitudeBottom = altitudeAxis.top + altitudeAxis.height;
-const timeLabelY = altitudeBottom + 20;
-const cloudAxis = { top: timeLabelY + 36, height: 56 };
-const cloudBottom = cloudAxis.top + cloudAxis.height;
-const height = cloudBottom + 8;
 const hourInMs = 3_600_000;
 const samplesPerHour = Math.round(hourInMs / sampleStepMs);
-const barMaxWidth = 24;
-const barRadius = 4;
-
-const skyClasses: Record<SkyPhase, { fill: string; swatch: string }> = {
-    day: { fill: "fill-sky-day", swatch: "bg-sky-day" },
-    civil: { fill: "fill-sky-civil", swatch: "bg-sky-civil" },
-    nautical: { fill: "fill-sky-nautical", swatch: "bg-sky-nautical" },
-    astronomical: { fill: "fill-sky-astronomical", swatch: "bg-sky-astronomical" },
-    night: { fill: "fill-sky-night", swatch: "bg-sky-night" }
-};
-
-const startTime = night.start.getTime();
-const duration = night.end.getTime() - startTime;
-const x = (time: Date) => margin.left + ((time.getTime() - startTime) / duration) * plotWidth;
-const yAltitude = (altitude: number) =>
-    altitudeAxis.top + ((altitudeAxis.max - altitude) / (altitudeAxis.max - altitudeAxis.min)) * altitudeAxis.height;
-const round = (value: number) => Math.round(value * 10) / 10;
-
-const linePath = (read: (sample: (typeof samples)[number]) => number) =>
-    samples.map((sample, index) => `${index === 0 ? "M" : "L"}${round(x(sample.time))} ${round(yAltitude(read(sample)))}`).join("");
-
-const bands = samples.reduce<{ phase: SkyPhase; start: Date; end: Date }[]>((runs, sample) => {
-    const end = new Date(Math.min(sample.time.getTime() + sampleStepMs, night.end.getTime()));
-    const last = runs.at(-1);
-    if (last && last.phase === sample.skyPhase) last.end = end;
-    else runs.push({ phase: sample.skyPhase, start: sample.time, end });
-    return runs;
-}, []);
-
-const hourCount = Math.floor(duration / hourInMs);
-const labelEvery = hourCount > 12 ? 2 : 1;
-const hours = Array.from({ length: hourCount + 1 }, (_, index) => new Date(startTime + index * hourInMs));
-
-const hourWidth = (hourInMs / duration) * plotWidth;
-const barWidth = Math.min(barMaxWidth, hourWidth - 2);
-const cloudBars = weather.hours.flatMap((hour) => {
-    const barHeight = (hour.cloudCover / 100) * cloudAxis.height;
-    if (barHeight < 0.5) return [];
-    const left = round(x(hour.time) - barWidth / 2);
-    const right = round(left + barWidth);
-    const top = round(cloudBottom - barHeight);
-    const radius = round(Math.min(barRadius, barHeight, barWidth / 2));
-    return [`M${left} ${cloudBottom}V${round(top + radius)}Q${left} ${top} ${round(left + radius)} ${top}H${round(right - radius)}Q${right} ${top} ${right} ${round(top + radius)}V${cloudBottom}Z`];
-});
-
-const moonPeak = findHighestPoint(samples.map(({ time, moonAltitude }) => ({ time, altitude: moonAltitude })));
-const firstSample = samples.at(0);
-const isLabelVisible = (altitude: number) => altitude > altitudeAxis.min + 6 && altitude < altitudeAxis.max - 4;
-
-const chartPoints = samples.map((sample) => ({
-    x: round(x(sample.time)),
-    time: formatTime(sample.time, timeZone),
-    phase: skyPhaseLabels[sample.skyPhase],
-    sun: formatDegrees(sample.sunAltitude),
-    moon: formatDegrees(sample.moonAltitude),
-    clouds: formatOptional(sample.weather?.cloudCover ?? null, formatPercentValue),
-    quality: formatPercent(sample.quality)
-}));
-
 const hourlyRows = samples.filter((_, index) => index % samplesPerHour === 0);
 const tableColumns = ["Heure", "Ciel", "Soleil", "Lune", "Nuages", "Bas", "Moyens", "Hauts", "Humidité", "Vent", "Temp.", "Qualité"];
 
-const description = `Hauteur du Soleil et de la Lune de ${formatTime(night.start, timeZone)} à ${formatTime(night.end, timeZone)}, phases du ciel, meilleurs créneaux et couverture nuageuse heure par heure.`;
 const legendLineClass = "h-0.5 w-5 rounded-full";
 const legendSwatchClass = "size-3.5 rounded-[3px] border";
-const axisLabelClass = "fill-muted-foreground text-[11px] tabular-nums";
-const directLabelClass = "fill-foreground text-[11px] font-semibold";
 ---
 
 <Panel title="Déroulé de la nuit" headingId="deroule-titre" icon={ChartSpline}>
@@ -109,86 +40,16 @@ const directLabelClass = "fill-foreground text-[11px] font-semibold";
         )}
         {skyPhases.map((phase) => (
                 <li class="inline-flex items-center gap-2">
-                    <span class:list={[legendSwatchClass, skyClasses[phase].swatch]}></span>{skyPhaseLabels[phase]}
+                    <span class:list={[legendSwatchClass, skyPhaseClasses[phase].swatch]}></span>{skyPhaseLabels[phase]}
                 </li>
         ))}
     </ul>
-    <div class="relative rounded-md" tabindex="0" role="group"
-         aria-label="Graphique explorable : utilise les flèches gauche et droite pour parcourir la nuit"
-         data-night-chart data-chart-width={width} data-chart-points={JSON.stringify(chartPoints)}>
-        <div class="overflow-x-auto">
-            <svg class="h-auto w-full min-w-160 animate-fade" viewBox={`0 0 ${width} ${height}`} role="img"
-                 aria-labelledby="graphique-titre graphique-description">
-                <title id="graphique-titre">Déroulé de la nuit</title>
-                <desc id="graphique-description">{description}</desc>
-                <defs>
-                    <clipPath id="graphique-zone-hauteur">
-                        <rect x={margin.left} y={altitudeAxis.top} width={plotWidth} height={altitudeAxis.height}></rect>
-                    </clipPath>
-                </defs>
-                {bands.map(({ phase, start, end }) => (
-                        <rect class={skyClasses[phase].fill} x={round(x(start))} y={altitudeAxis.top}
-                              width={round(x(end) - x(start))} height={altitudeAxis.height}></rect>
-                ))}
-                {windows.map((window) => (
-                        <g class="fill-chart-brand">
-                            <rect class="opacity-15" x={round(x(window.start))} y={altitudeAxis.top}
-                                  width={round(x(window.end) - x(window.start))} height={altitudeAxis.height}></rect>
-                            <rect x={round(x(window.start))} y={altitudeAxis.top}
-                                  width={round(x(window.end) - x(window.start))} height="3"></rect>
-                        </g>
-                ))}
-                {altitudeAxis.ticks.map((tick) => (
-                        <g>
-                            <line class:list={[tick === 0 ? "stroke-chart-muted" : "stroke-chart-grid"]}
-                                  x1={margin.left} x2={width - margin.right} y1={yAltitude(tick)} y2={yAltitude(tick)}></line>
-                            <text class={axisLabelClass} x={margin.left - 8} y={yAltitude(tick) + 4} text-anchor="end">
-                                {formatDegrees(tick)}
-                            </text>
-                        </g>
-                ))}
-                <g class="fill-none" clip-path="url(#graphique-zone-hauteur)" stroke-width="2" stroke-linecap="round"
-                   stroke-linejoin="round">
-                    <path class="animate-draw stroke-chart-muted" pathLength="1" stroke-dasharray="1 1"
-                          d={linePath(({ sunAltitude }) => sunAltitude)}></path>
-                    <path class="animate-draw stroke-chart-brand" pathLength="1" stroke-dasharray="1 1"
-                          d={linePath(({ moonAltitude }) => moonAltitude)}></path>
-                </g>
-                {moonPeak && isLabelVisible(moonPeak.altitude) && (
-                        <text class={directLabelClass} x={x(moonPeak.time)} y={yAltitude(moonPeak.altitude) - 10}
-                              text-anchor="middle">Lune</text>
-                )}
-                {firstSample && isLabelVisible(firstSample.sunAltitude) && (
-                        <text class={directLabelClass} x={margin.left + 6} y={yAltitude(firstSample.sunAltitude) - 10}>Soleil</text>
-                )}
-                {hours.map((hour, index) => (
-                        <g>
-                            <line class="stroke-chart-grid" x1={x(hour)} x2={x(hour)} y1={altitudeBottom} y2={altitudeBottom + 5}></line>
-                            {index % labelEvery === 0 && (
-                                    <text class={axisLabelClass} x={x(hour)} y={timeLabelY} text-anchor="middle">
-                                        {formatTime(hour, timeZone)}
-                                    </text>
-                            )}
-                        </g>
-                ))}
-                <text class={directLabelClass} x={margin.left} y={cloudAxis.top - 10}>Couverture nuageuse</text>
-                <line class="stroke-chart-grid" x1={margin.left} x2={width - margin.right} y1={cloudAxis.top} y2={cloudAxis.top}></line>
-                <line class="stroke-chart-muted" x1={margin.left} x2={width - margin.right} y1={cloudBottom} y2={cloudBottom}></line>
-                <text class={axisLabelClass} x={margin.left - 8} y={cloudAxis.top + 4} text-anchor="end">{formatPercent(1)}</text>
-                <text class={axisLabelClass} x={margin.left - 8} y={cloudBottom + 4} text-anchor="end">{formatPercent(0)}</text>
-                {weather.hours.length > 0
-                    ? <g class="fill-chart-muted">{cloudBars.map((path) => <path d={path}></path>)}</g>
-                    : <text class={axisLabelClass} x={margin.left + plotWidth / 2} y={cloudAxis.top + cloudAxis.height / 2 + 4}
-                            text-anchor="middle">Prévisions nuageuses indisponibles pour cette date</text>}
-                <line class="pointer-events-none stroke-foreground" x1="0" x2="0" y1={altitudeAxis.top} y2={cloudBottom}
-                      visibility="hidden" data-chart-crosshair></line>
-                <rect class="cursor-crosshair fill-transparent" x={margin.left} y={altitudeAxis.top} width={plotWidth}
-                      height={cloudBottom - altitudeAxis.top} data-chart-hit></rect>
-            </svg>
+    <NightTimeline client:only="react" data={toNightTimelineData(report)}>
+        <div slot="fallback" class="grid gap-4" aria-hidden="true">
+            <Skeleton className="h-64 sm:h-80"/>
+            <Skeleton className="h-31"/>
         </div>
-        <div class="pointer-events-none absolute top-2 z-10 grid min-w-40 gap-0.5 rounded-lg border bg-popover p-3 text-[0.8125rem] text-popover-foreground shadow-lg"
-             hidden aria-live="polite" data-chart-tooltip></div>
-    </div>
+    </NightTimeline>
     <details class="group">
         <summary class="font-semibold text-foreground">Données heure par heure</summary>
         <div class="mt-4 max-h-96 overflow-auto">
@@ -220,9 +81,3 @@ const directLabelClass = "fill-foreground text-[11px] font-semibold";
         </div>
     </details>
 </Panel>
-
-<script>
-    import { initNightChart } from "@/scripts/night-chart";
-
-    initNightChart();
-</script>

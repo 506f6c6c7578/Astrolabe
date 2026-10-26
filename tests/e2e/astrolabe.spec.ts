@@ -26,7 +26,10 @@ async function visit(page: Page, path: string) {
 }
 
 async function expectNoHorizontalOverflow(page: Page) {
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    const overflow = await page.evaluate(() => Math.max(
+        document.documentElement.scrollWidth - window.innerWidth,
+        ...Array.from(document.querySelectorAll("[data-slot=card]"), (card) => card.scrollWidth - card.clientWidth)
+    ));
     expect(overflow).toBeLessThanOrEqual(0);
 }
 
@@ -124,15 +127,26 @@ test.describe("rapport de nuit", () => {
 
     test("permet d'explorer le graphique au clavier", async ({ page }) => {
         await visit(page, nightPath);
-        const chart = page.getByRole("group", { name: /Graphique explorable/ });
+        const chart = page.getByRole("application", { name: "Hauteur du Soleil et de la Lune" });
+        const tooltip = page.getByRole("region", { name: "Déroulé de la nuit" }).getByRole("status");
         await chart.focus();
-        const tooltip = page.locator("[data-chart-tooltip]");
-        await expect(tooltip).toBeVisible();
+        await chart.press("ArrowRight");
+        await expect(tooltip).toHaveText(/^\d{2}:\d{2} · /);
         const first = await tooltip.textContent();
         await chart.press("ArrowRight");
         await expect(tooltip).not.toHaveText(first ?? "");
-        await chart.press("Escape");
-        await expect(tooltip).toBeHidden();
+    });
+
+    test("affiche le point touché du graphique", async ({ page, hasTouch }) => {
+        test.skip(!hasTouch, "Interaction tactile uniquement");
+        await visit(page, nightPath);
+        const chart = page.getByRole("application", { name: "Hauteur du Soleil et de la Lune" });
+        const tooltip = page.getByRole("region", { name: "Déroulé de la nuit" }).getByRole("status");
+        await chart.tap({ position: { x: 80, y: 100 } });
+        await expect(tooltip).toHaveText(/^\d{2}:\d{2} · /);
+        const first = await tooltip.textContent();
+        await chart.tap({ position: { x: 220, y: 100 } });
+        await expect(tooltip).not.toHaveText(first ?? "");
     });
 
     test("enregistre le lieu en favori et le propose sur l'accueil", async ({ page }) => {

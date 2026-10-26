@@ -25,7 +25,7 @@ export function Panel({ title, headingId, icon: Icon, action, className, childre
                 </CardTitle>
                 {action && <CardAction>{action}</CardAction>}
             </CardHeader>
-            <CardContent className="grid min-w-0 gap-5 text-[0.9375rem]">{children}</CardContent>
+            <CardContent className="grid grid-cols-1 gap-5 text-[0.9375rem]">{children}</CardContent>
         </Card>
     );
 }

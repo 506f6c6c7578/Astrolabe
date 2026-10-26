@@ -72,8 +72,8 @@ export function PlannerForm({ place, date }: PlannerFormProps) {
     };
 
     return (
-        <form className="grid gap-5 md:grid-cols-[2fr_1fr] md:items-start" onSubmit={submit} noValidate>
-            <div className="grid gap-2">
+        <form className="grid grid-cols-1 gap-5 md:grid-cols-[2fr_1fr] md:items-start" onSubmit={submit} noValidate>
+            <div className="grid grid-cols-1 gap-2">
                 <Label htmlFor={`${id}-lieu`} className="text-sm font-semibold text-foreground">Lieu d'observation</Label>
                 <PlaceSearch id={`${id}-lieu`} value={selected} invalid={invalid} onChange={choose}/>
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -87,7 +87,7 @@ export function PlannerForm({ place, date }: PlannerFormProps) {
                     </Button>
                 </div>
             </div>
-            <div className="grid gap-2">
+            <div className="grid grid-cols-1 gap-2">
                 <Label htmlFor={`${id}-date`} className="text-sm font-semibold text-foreground">Date de la soirée</Label>
                 <DatePicker id={`${id}-date`} value={day} onChange={setDay}/>
             </div>

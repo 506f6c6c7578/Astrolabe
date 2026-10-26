@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
     findHourlyWeather,
     type HourlyWeather,
+    interpolateCloudCover,
     isWithinForecastRange,
     summarizeWeather
 } from "@/domain/weather/forecast";
@@ -34,6 +35,15 @@ describe("prévisions météo", () => {
         const hours = [hour("2026-10-24T18:00:00Z"), hour("2026-10-24T19:00:00Z", { cloudCover: 80 })];
         expect(findHourlyWeather(hours, new Date("2026-10-24T18:40:00Z"))?.cloudCover).toBe(80);
         expect(findHourlyWeather(hours, new Date("2026-10-24T22:00:00Z"))).toBeNull();
+    });
+
+    it("interpole la couverture nuageuse entre deux heures", () => {
+        const hours = [hour("2026-10-24T18:00:00Z"), hour("2026-10-24T19:00:00Z", { cloudCover: 80 })];
+        expect(interpolateCloudCover(hours, new Date("2026-10-24T18:30:00Z"))).toBeCloseTo(50);
+        expect(interpolateCloudCover(hours, new Date("2026-10-24T19:00:00Z"))).toBe(80);
+        expect(interpolateCloudCover(hours, new Date("2026-10-24T17:40:00Z"))).toBe(20);
+        expect(interpolateCloudCover(hours, new Date("2026-10-24T21:00:00Z"))).toBeNull();
+        expect(interpolateCloudCover([], new Date("2026-10-24T18:00:00Z"))).toBeNull();
     });
 
     it("résume la nuit en pondérant les heures et en détectant la rosée", () => {

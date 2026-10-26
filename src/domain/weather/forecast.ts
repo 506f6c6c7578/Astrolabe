@@ -56,6 +56,15 @@ export function findHourlyWeather(hours: readonly HourlyWeather[], time: Date): 
     return nearest;
 }
 
+export function interpolateCloudCover(hours: readonly HourlyWeather[], time: Date): number | null {
+    const nextIndex = hours.findIndex((hour) => hour.time >= time);
+    const next = hours[nextIndex];
+    const previous = hours[nextIndex - 1];
+    if (!next || !previous) return findHourlyWeather(hours, time)?.cloudCover ?? null;
+    const ratio = (time.getTime() - previous.time.getTime()) / (next.time.getTime() - previous.time.getTime());
+    return previous.cloudCover + (next.cloudCover - previous.cloudCover) * ratio;
+}
+
 function averageOf(entries: readonly WeightedWeather[], read: (weather: HourlyWeather) => number | null) {
     return weightedAverage(entries.flatMap(({ weather, weight }) => {
         const value = read(weather);
