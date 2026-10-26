@@ -89,6 +89,38 @@ test.describe("accueil", () => {
         await expect(page.getByRole("heading", { level: 1, name: "Lyon" })).toBeVisible();
     });
 
+    test("mémorise les cinq dernières recherches de lieux et permet de les retirer", async ({ page }) => {
+        const previous = Array.from({ length: 5 }, (_, index) => ({ ...lyon, name: `Lieu ${index + 1}`, latitude: 40 + index }));
+        await page.addInitScript((places) => localStorage.setItem("astrolabe:lieux-recents", JSON.stringify(places)), previous);
+        await page.route("**/api/lieux?**", (route) => route.fulfill({ json: { places: [lyon] } }));
+        await visit(page, "/");
+        const combobox = page.getByRole("combobox", { name: "Lieu d'observation" });
+        const recents = page.getByRole("group", { name: "Recherches récentes" });
+        const search = page.getByRole("dialog");
+
+        await combobox.click();
+        await expect(page.getByPlaceholder("Rechercher un lieu...")).toBeFocused();
+        await expect(recents.getByRole("listitem")).toHaveCount(5);
+        await page.getByPlaceholder("Rechercher un lieu...").fill("Lyo");
+        await expect(recents).toHaveCount(0);
+        await page.getByRole("option", { name: /Lyon/ }).click();
+        await expect(search).toBeHidden();
+
+        await combobox.click();
+        await expect(recents.getByRole("listitem")).toHaveCount(5);
+        await expect(recents.getByRole("listitem").first()).toContainText("Lyon");
+        await expect(recents).not.toContainText("Lieu 5");
+        await recents.getByRole("button", { name: /^Retirer Lyon/ }).click();
+        await expect(recents.getByRole("listitem")).toHaveCount(4);
+        await expect(page.getByPlaceholder("Rechercher un lieu...")).toBeFocused();
+
+        await recents.getByRole("button", { name: /^Lieu 2/ }).press("Enter");
+        await expect(combobox).toHaveText(/Lieu 2/);
+        await expect(search).toBeHidden();
+        await combobox.click();
+        await expect(recents.getByRole("listitem").first()).toContainText("Lieu 2");
+    });
+
     test("signale une recherche sans résultat et un lieu manquant", async ({ page }) => {
         await page.route("**/api/lieux?**", (route) => route.fulfill({ json: { places: [] } }));
         await visit(page, "/");

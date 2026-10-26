@@ -5,7 +5,8 @@ import {
     favoriteObjectsSchema,
     favoritePlacesSchema,
     favoriteStorageKeys,
-    parseStoredList
+    parseStoredList,
+    recentPlacesSchema
 } from "@/lib/validation/favorites";
 import type { Place } from "@/lib/validation/place";
 
@@ -14,6 +15,7 @@ export interface FavoriteStore<Item> {
     getSnapshot: () => readonly Item[];
     getServerSnapshot: () => readonly Item[];
     subscribe: (listener: () => void) => () => void;
+    add: (item: Item) => void;
     toggle: (item: Item) => void;
     remove: (item: Item) => void;
 }
@@ -61,7 +63,9 @@ function createFavoriteStore<Item>(
         window.dispatchEvent(new Event(changeEvent));
     };
 
-    const remove = (item: Item) => save(getSnapshot().filter((entry) => identify(entry) !== identify(item)));
+    const withoutItem = (item: Item) => getSnapshot().filter((entry) => identify(entry) !== identify(item));
+    const remove = (item: Item) => save(withoutItem(item));
+    const add = (item: Item) => save([item, ...withoutItem(item)]);
 
     return {
         identify,
@@ -78,20 +82,29 @@ function createFavoriteStore<Item>(
                 window.removeEventListener("storage", onStorage);
             };
         },
+        add,
         remove,
         toggle: (item) => {
-            const items = getSnapshot();
-            if (items.some((entry) => identify(entry) === identify(item))) remove(item);
-            else save([item, ...items]);
+            if (getSnapshot().some((entry) => identify(entry) === identify(item))) remove(item);
+            else add(item);
         }
     };
 }
 
+const identifyPlace = ({ latitude, longitude }: Place) => `${latitude.toFixed(3)},${longitude.toFixed(3)}`;
+
 export const favoritePlaces = createFavoriteStore<Place>(
     favoriteStorageKeys.places,
     favoritePlacesSchema,
-    ({ latitude, longitude }) => `${latitude.toFixed(3)},${longitude.toFixed(3)}`,
+    identifyPlace,
     favoriteLimits.places
+);
+
+export const recentPlaces = createFavoriteStore<Place>(
+    favoriteStorageKeys.recentPlaces,
+    recentPlacesSchema,
+    identifyPlace,
+    favoriteLimits.recentPlaces
 );
 
 export const favoriteObjects = createFavoriteStore<string>(

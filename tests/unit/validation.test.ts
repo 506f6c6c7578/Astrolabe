@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
     favoriteObjectsSchema,
     favoritePlacesSchema,
-    parseStoredList
+    parseStoredList,
+    recentPlacesSchema
 } from "@/lib/validation/favorites";
 import { createNightPath, parseNightQuery } from "@/lib/validation/night-query";
 import { getPlaceLabel, placeSchema } from "@/lib/validation/place";
@@ -85,5 +86,11 @@ describe("favoris stockés", () => {
 
     it("refuse une liste trop longue", () => {
         expect(parseStoredList(JSON.stringify(Array.from({ length: 21 }, () => lyon)), favoritePlacesSchema)).toEqual([]);
+    });
+
+    it("limite l'historique aux cinq dernières recherches", () => {
+        const places = Array.from({ length: 5 }, () => lyon);
+        expect(parseStoredList(JSON.stringify(places), recentPlacesSchema)).toEqual(places);
+        expect(parseStoredList(JSON.stringify([...places, lyon]), recentPlacesSchema)).toEqual([]);
     });
 });
