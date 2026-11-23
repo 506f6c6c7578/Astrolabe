@@ -180,7 +180,7 @@ La stack est décrite dans [`compose.yaml`](compose.yaml) et construite depuis u
 
 | Service     | Image                         | Rôle                                                                 |
 | ----------- | ----------------------------- | -------------------------------------------------------------------- |
-| `astrolabe` | `nginx-unprivileged` (Alpine) | Sert le site statique précompressé et relaie `/nuit` et `/api/lieux` |
+| `astrolabe` | `nginx` (Alpine, non-root) | Sert le site statique précompressé et relaie `/nuit` et `/api/lieux` |
 | `app`       | `node` (Alpine)               | Calcule les rapports de nuit et interroge Open-Meteo                 |
 
 ```bash
